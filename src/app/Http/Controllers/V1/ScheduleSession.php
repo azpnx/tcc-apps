@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use OpenApi\Annotations as OA;
 
 /**
@@ -36,7 +35,6 @@ class ScheduleSession extends Controller
     )
     {
         $this->table = Db::table(self::TABLE_NAME);
-        $this->checkMigrate();
     }
 
     /**
@@ -203,7 +201,7 @@ class ScheduleSession extends Controller
         $sessionId = $this->table->insertGetId([
             self::USER_ID => $userId,
             self::PROFESSIONAL_ID => $professionalId,
-            self::SESSION_DATE => $sessionDate->format('d/m/Y H:i'),
+            self::SESSION_DATE => $sessionDate,
             self::MEET_ID => $meetId
         ]);
 
@@ -283,15 +281,5 @@ class ScheduleSession extends Controller
 
         return empty($affectedRows) ? response()->json(['error' => "Session with ID $sessionId not found"], 400)
             : response()->json(['success' => "Session with id $sessionId successfully deleted"]);
-    }
-
-    /**
-     * Check if table exists, if not, run migrate to create default table
-     */
-    private function checkMigrate(): void
-    {
-        if (!Schema::hasTable(self::TABLE_NAME)) {
-            \Artisan::call('migrate');
-        }
     }
 }

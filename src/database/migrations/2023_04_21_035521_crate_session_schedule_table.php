@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('professional_id');
             $table->dateTime('session_date');
             $table->integer('meet_id');
-            $table->timestamps();
         });
     }
 
