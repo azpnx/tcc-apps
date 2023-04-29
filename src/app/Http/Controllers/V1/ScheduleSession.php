@@ -8,6 +8,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Annotations as OA;
 
@@ -30,8 +31,9 @@ class ScheduleSession extends Controller
      * @param Response $response
      */
     public function __construct(
-        public Request $request,
-        public Response $response
+        private Request $request,
+        private Response $response,
+        private Client $client
     )
     {
         $this->table = Db::table(self::TABLE_NAME);
@@ -197,6 +199,15 @@ class ScheduleSession extends Controller
     {
         $sessionDate = new \DateTime($sessionDate);
         $meetId = rand();
+        try {
+            $response = $this->client->post("http://psi-gateway:8125/api/consulta/twilio/room/$meetId");
+        } catch (Exception $exception) {
+            return response()->json(['error' => 'Was not possible to create a new session'], 400);
+        }
+        
+        if ($response->getStatusCode() !== 200) {
+            return response()->json(['error' => 'Was not possible to create a new session'], 400);
+        }
 
         $sessionId = $this->table->insertGetId([
             self::USER_ID => $userId,

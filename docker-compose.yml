@@ -111,3 +111,126 @@ services:
       - "8025:8025"
     networks:
       - laravel
+
+  db:
+    image: postgres:14.2-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: tcc_logindb
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - laravel
+
+  psi-discovery-server:
+    image: docker.io/gasbiru/psi-discovery-server:latest
+    pull_policy: always
+    ports:
+      - "8671:8671"
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
+    networks:
+      - laravel
+
+  zipkin:
+    image: openzipkin/zipkin
+    ports: 
+      - "9411:9411"
+    networks:
+      - laravel
+
+  psi-user:
+      image: gasbiru/psi-user:latest
+      pull_policy: always
+      ports:
+        - "8383:8383"
+      depends_on:
+        - psi-discovery-server
+        - db
+      environment:
+        SPRING.ZIPKIN.BASEURL: http://zipkin:9411
+        EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
+        SPRING.APPLICATION.NAME: psi-user
+        SPRING.DATASOURCE.URL: jdbc:postgresql://db:5432/tcc_logindb
+        SPRING.DATASOURCE.PASSWORD: 123
+        SPRING.MAIL.HOST: smtp.gmail.com
+        SPRING.MAIL.PORT: 587
+        SPRING.MAIL.USERNAME: psicotccunip2022@gmail.com
+        SPRING.MAIL.PASSWORD: elueiwtdinwuwidp
+        ENDPOINT.TOKEN-CONFIRM: localhost:8125
+      networks:
+        - laravel
+
+  psi-gateway:
+    image: gasbiru/psi-gateway:latest
+    pull_policy: always
+    expose:
+      - 8125
+    ports:
+      - "8125:8125"
+    depends_on:
+      - psi-discovery-server
+    environment:
+      SPRING.ZIPKIN.BASEURL: http://zipkin:9411
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
+    networks:
+      - laravel
+
+
+  psi-auth:
+    image: gasbiru/psi-auth:latest
+    pull_policy: always
+    ports:
+      - "8003:8003"
+    depends_on:
+      - psi-discovery-server
+      - db
+      - psi-user
+    environment:
+      SPRING.ZIPKIN.BASEURL: http://zipkin:9411
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
+    networks:
+      - laravel
+
+  psi-notes:
+    image: gasbiru/psi-notes:latest
+    pull_policy: always
+    ports:
+      - "8005:8005"
+    depends_on:
+      - psi-discovery-server
+      - db
+      - psi-user
+    environment:
+      SPRING.ZIPKIN.BASEURL: http://zipkin:9411
+      SPRING.DATASOURCE.URL: jdbc:postgresql://db:5432/tcc_logindb
+      SPRING.DATASOURCE.PASSWORD: 123
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
+    networks:
+      - laravel
+
+  psi-consulta:
+    image: gasbiru/psi-consulta:latest
+    pull_policy: always
+    ports:
+      - "8008:8008"
+    depends_on:
+      - psi-discovery-server
+      - db
+      - psi-user
+    environment:
+      SPRING.ZIPKIN.BASEURL: http://zipkin:9411
+      SPRING.DATASOURCE.URL: jdbc:postgresql://db:5432/tcc_logindb
+      SPRING.DATASOURCE.PASSWORD: 123
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
+      account-sid: AC4311dc2ff1a4b0c79b54482fba96faad
+      auth_token: f3b6416da4d6c8c71dd7631688c23277
+      key_sid: SK185f18ac78d8aa00276a5b291b390023
+      key_secret: 51g5MqLHuwZ7MblgrMeLMZBJPel3qBIZ
+      service_id: ISc865c530b2554b069574161ddd00adee
+    networks:
+      - laravel
