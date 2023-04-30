@@ -12,7 +12,9 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
     ports:
-      - "80:80"
+      - "8050:8050"
+    expose:
+      - 8050
     volumes:
       - ./src:/var/www/html:delegated
     depends_on:
@@ -81,7 +83,6 @@ services:
     volumes:
       - ./src:/var/www/html
     ports:
-      - "3000:3000"
       - "3001:3001"
       - "5173:5173"
     working_dir: /var/www/html
@@ -217,13 +218,14 @@ services:
     image: gasbiru/psi-consulta:latest
     pull_policy: always
     ports:
-      - "8008:8008"
+      - "8080:8080"
     depends_on:
       - psi-discovery-server
       - db
       - psi-user
     environment:
       SPRING.ZIPKIN.BASEURL: http://zipkin:9411
+      SPRING.APPLICATION.NAME: psi-consulta
       SPRING.DATASOURCE.URL: jdbc:postgresql://db:5432/tcc_logindb
       SPRING.DATASOURCE.PASSWORD: 123
       EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://psi-discovery-server:8671/eureka
@@ -234,3 +236,14 @@ services:
       service_id: ISc865c530b2554b069574161ddd00adee
     networks:
       - laravel
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: 123
+    ports:
+      - "8079:8079"
+    depends_on:
+      - db 
+    expose:
+      - 8079
