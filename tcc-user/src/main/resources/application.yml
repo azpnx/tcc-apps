@@ -1,0 +1,49 @@
+server:
+  port: 8383
+
+endpoint:
+  token-confirm: 35.247.228.233:8125
+
+spring:
+  application:
+    name: psi-user
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tcc_logindb
+    password: 123
+    driverClassName: org.postgresql.Driver
+    username: postgres
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  sleuth:
+    sampler:
+      probability: 1.0
+
+springdoc:
+  api-docs:
+    path: psi-user/v3/api-docs
+  show-actuator: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8671/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

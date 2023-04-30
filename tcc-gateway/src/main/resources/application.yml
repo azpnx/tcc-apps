@@ -1,0 +1,73 @@
+server:
+  port: 8125
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway
+
+spring:
+  application:
+    name: psi-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+      - id: psi-user
+        uri: lb://psi-user
+        predicates:
+          - Path=/api/usuarios/**
+        filters:
+          - StripPrefix=2
+      - id: psi-auth
+        uri: lb://psi-auth
+        predicates:
+          - Path=/api/security/**
+        filters:
+          - StripPrefix=2
+      - id: psi-consulta
+        uri: lb://psi-consulta
+        predicates:
+          - Path=/api/consulta/**
+        filters:
+          - StripPrefix=2
+      - id: psi-notes
+        uri: lb://psi-notes
+        predicates:
+          - Path=/api/notes/**
+        filters:
+          - StripPrefix=2
+      - id: api-docs
+        uri: lb://psi-gateway
+        predicates:
+          - Path=/v3/api-docs/**
+        filters:
+          - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+  sleuth:
+    sampler:
+      probability: 1.0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8671/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.uuid}}
+
+config:
+  security:
+    oauth:
+      jwt:
+        key: testequalquerqueprecisaterumasenhagrande
